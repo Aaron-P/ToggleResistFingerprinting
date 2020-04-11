@@ -6,7 +6,7 @@
             await browser.browserAction.setBadgeBackgroundColor({ color: "#00BF00" });
             await browser.browserAction.setBadgeText({ text: "On" });
         } else {
-            await browser.browserAction.setBadgeBackgroundColor({ color: "#666666" });
+            await browser.browserAction.setBadgeBackgroundColor({ color: "#FF0000" });
             await browser.browserAction.setBadgeText({ text: "Off" });
         }
     }
