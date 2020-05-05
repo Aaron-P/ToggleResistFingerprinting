@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Options</title>
+</head>
+
+<body>
+    <form id="options" action="#">
+        <div>
+            <label for="maximize-window-types">Automatically maximize new windows:</label>
+            <br />
+            <select id="maximize-window-types">
+                <option value="0">Never</option>
+                <option value="1">Normal</option>
+                <!-- <option value="2">Private</option> -->
+                <option value="3">Normal &amp; Private</option>
+            </select>
+            <p>NOTE: Resizing or maximizing windows makes your browser more identifiable. "Run in Private Windows" must
+                be set to "Allow" on the extension details page to automatically maximize private windows.</p>
+        </div>
+    </form>
+    <script src="options.js"></script>
+</body>
+
+</html>

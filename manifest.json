@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Toggle Resist Fingerprinting",
-    "version": "1.1",
+    "version": "1.2",
     "description": "Adds a button to the navigation bar to toggle the \"resist fingerprinting\" setting.",
     "author": "Aaron Papp",
     "homepage_url": "https://github.com/Aaron-P/ToggleResistFingerprinting",
@@ -13,6 +13,7 @@
         "96": "src/icons/icon.svg"
     },
     "permissions": [
+        "storage",
         "privacy"
     ],
     "background": {
@@ -20,9 +21,14 @@
             "src/background.js"
         ]
     },
+    "options_ui": {
+        "browser_style": true,
+        "page": "src/options.xhtml"
+    },
     "browser_action": {
         "default_icon": "src/icons/icon.svg",
         "default_title": "Resist Fingerprinting",
+        "default_area": "tabstrip",
         "theme_icons": [
             {
                 "light": "src/icons/icon-light.svg",

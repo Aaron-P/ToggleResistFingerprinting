@@ -1,0 +1,4 @@
+If we can get a good way to get the last window or the screen size we can recreate the normal windowed/maximized functionality
+    Resist fingerprinting interferes with the "screen" object values.
+
+Refactor the code to get rid of the global "enabled" state.
