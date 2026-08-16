@@ -1,8 +1,11 @@
 # Toggle Resist Fingerprinting
 
-Adds a button to the navigation bar to toggle the "resist fingerprinting" setting; to help prevent websites from fingerprinting your browser for tracking purposes.
+Adds a button to toggle the "resist fingerprinting" setting to help prevent websites from fingerprinting your browser for tracking purposes.
 
-Compatible with **Firefox Desktop** (v63.0+) and **Firefox for Android** (v120.0+).
+## Platform Support
+
+- **Firefox Desktop (v63.0+):** Adds a toolbar toggle button that flips the setting instantly with a single click.
+- **Firefox for Android (v120.0+):** Adds an entry in the three-dot main menu's **Extensions** sheet with a touch-friendly popup toggle.
 
 Enabling the "resist fingerprinting" setting may break some websites. Information about the "resist fingerprinting" setting can be found at [https://wiki.mozilla.org/Security/Fingerprinting](https://wiki.mozilla.org/Security/Fingerprinting).
 
