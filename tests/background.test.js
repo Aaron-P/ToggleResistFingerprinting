@@ -2,13 +2,21 @@ const { describe, it } = require("node:test");
 const assert = require("node:assert");
 const fs = require("node:fs");
 const path = require("node:path");
+const { setTimeout: sleep } = require("node:timers/promises");
 const vm = require("node:vm");
 
 function createMockBrowser(options = {}) {
-    const { hasWindows = true, resistFingerprinting = true } = options;
+    const { hasWindows = true, resistFingerprinting = true, platformOs = "linux" } = options;
 
     const mock = {
+        runtime: {
+            getPlatformInfo: async () => ({ os: platformOs })
+        },
         browserAction: {
+            popup: undefined,
+            setPopup: async ({ popup }) => {
+                mock.browserAction.popup = popup;
+            },
             setBadgeBackgroundColor: async () => {},
             setBadgeText: async () => {},
             setBadgeTextColor: async () => {},
@@ -53,7 +61,7 @@ function createMockBrowser(options = {}) {
         mock.windows = {
             updatedWindows: [],
             update: async (windowId, updateInfo) => {
-                mock.windows.updatedWindows.push({ windowId, updateInfo });
+                mock.windows.updatedWindows.push({ windowId, updateInfo: { ...updateInfo } });
             },
             onCreated: {
                 listeners: [],
@@ -69,58 +77,73 @@ function createMockBrowser(options = {}) {
     return mock;
 }
 
-describe("background.js compatibility", () => {
+describe("background.js platform-adaptive behavior", () => {
     const backgroundCode = fs.readFileSync(
         path.resolve(__dirname, "../src/background.js"),
         "utf-8"
     );
 
-    it("should execute cleanly on Android environment where browser.windows is undefined", async () => {
-        const mockBrowser = createMockBrowser({ hasWindows: false });
+    it("should clear popup and attach onClicked listener on Desktop (linux/mac/win)", async () => {
+        const mockBrowser = createMockBrowser({ hasWindows: true, platformOs: "linux" });
         const sandbox = { browser: mockBrowser, console };
         vm.createContext(sandbox);
 
-        // Without guard, this will throw: TypeError: Cannot read properties of undefined (reading 'onCreated')
-        await assert.doesNotReject(async () => {
-            vm.runInContext(backgroundCode, sandbox);
-            await new Promise((resolve) => setTimeout(resolve, 50));
-        });
+        vm.runInContext(backgroundCode, sandbox);
+        await sleep(50);
 
-        // Tabs and browser action listeners must still register
-        assert.strictEqual(mockBrowser.tabs.onActivated.listeners.length, 1);
+        // On desktop, popup should be cleared to allow onClicked events
+        assert.strictEqual(mockBrowser.browserAction.popup, "");
         assert.strictEqual(mockBrowser.browserAction.onClicked.listeners.length, 1);
+
+        // Verify click toggles resistFingerprinting
+        const [clickListener] = mockBrowser.browserAction.onClicked.listeners;
+        assert.strictEqual(mockBrowser.privacy.websites.resistFingerprinting.value, true);
+        await clickListener();
+        assert.strictEqual(mockBrowser.privacy.websites.resistFingerprinting.value, false);
     });
 
-    it("should register windows listeners on Desktop environment where browser.windows is defined", async () => {
-        const mockBrowser = createMockBrowser({ hasWindows: true });
+    it("should retain default popup and NOT attach onClicked listener on Android", async () => {
+        const mockBrowser = createMockBrowser({ hasWindows: false, platformOs: "android" });
+        const sandbox = { browser: mockBrowser, console };
+        vm.createContext(sandbox);
+
+        vm.runInContext(backgroundCode, sandbox);
+        await sleep(50);
+
+        // On Android, popup must NOT be cleared and onClicked must NOT be registered
+        assert.strictEqual(mockBrowser.browserAction.popup, undefined);
+        assert.strictEqual(mockBrowser.browserAction.onClicked.listeners.length, 0);
+    });
+
+    it("should execute cleanly on Android environment where browser.windows is undefined", async () => {
+        const mockBrowser = createMockBrowser({ hasWindows: false, platformOs: "android" });
         const sandbox = { browser: mockBrowser, console };
         vm.createContext(sandbox);
 
         await assert.doesNotReject(async () => {
             vm.runInContext(backgroundCode, sandbox);
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await sleep(50);
         });
 
-        assert.strictEqual(mockBrowser.windows.onCreated.listeners.length, 1);
-        assert.strictEqual(mockBrowser.windows.onFocusChanged.listeners.length, 1);
         assert.strictEqual(mockBrowser.tabs.onActivated.listeners.length, 1);
     });
 
     it("should maximize normal windows on Desktop when configured", async () => {
-        const mockBrowser = createMockBrowser({ hasWindows: true, resistFingerprinting: true });
+        const mockBrowser = createMockBrowser({ hasWindows: true, resistFingerprinting: true, platformOs: "linux" });
         mockBrowser.storage.local.data = { maximizeWindowTypes: 1 }; // Maximize Normal
         const sandbox = { browser: mockBrowser, console };
         vm.createContext(sandbox);
 
         vm.runInContext(backgroundCode, sandbox);
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        await sleep(50);
 
-        // Trigger onCreated
-        const windowListener = mockBrowser.windows.onCreated.listeners[0];
+        const [windowListener] = mockBrowser.windows.onCreated.listeners;
         await windowListener({ id: 42, type: "normal", incognito: false });
 
         assert.strictEqual(mockBrowser.windows.updatedWindows.length, 1);
-        assert.strictEqual(mockBrowser.windows.updatedWindows[0].windowId, 42);
-        assert.strictEqual(mockBrowser.windows.updatedWindows[0].updateInfo.state, "maximized");
+        assert.deepStrictEqual(mockBrowser.windows.updatedWindows[0], {
+            windowId: 42,
+            updateInfo: { state: "maximized" }
+        });
     });
 });
