@@ -3,7 +3,79 @@
 
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Options</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #222222;
+            --border-color: #cccccc;
+            --select-bg: #ffffff;
+            --note-color: #555555;
+            --focus-outline: #0060df;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #2b2a33;
+                --text-color: #fbfbfe;
+                --border-color: #52525e;
+                --select-bg: #42414d;
+                --note-color: #cfcfd8;
+                --focus-outline: #00ddff;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #options {
+            width: 100%;
+            max-width: 520px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        select {
+            width: 100%;
+            min-height: 44px;
+            font-size: 16px;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--select-bg);
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: 2px solid var(--focus-outline);
+            outline-offset: 1px;
+        }
+
+        p {
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--note-color);
+            margin-top: 12px;
+        }
+    </style>
 </head>
 
 <body>
