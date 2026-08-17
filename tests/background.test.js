@@ -6,22 +6,28 @@ const { setTimeout: sleep } = require("node:timers/promises");
 const vm = require("node:vm");
 
 function createMockBrowser(options = {}) {
-    const { hasWindows = true, resistFingerprinting = true, platformOs = "linux" } = options;
+    const {
+        hasWindows = true,
+        resistFingerprinting = true,
+        platformOs = "linux",
+        levelOfControl = "controlled_by_this_extension"
+    } = options;
+
+    let disabled = false;
+    let actionTitle = "";
 
     const mock = {
         runtime: {
             getPlatformInfo: async () => ({ os: platformOs })
         },
         browserAction: {
-            popup: undefined,
-            setPopup: async ({ popup }) => {
-                mock.browserAction.popup = popup;
-            },
+            get disabled() { return disabled; },
+            get title() { return actionTitle; },
             setBadgeBackgroundColor: async () => {},
             setBadgeText: async () => {},
             setBadgeTextColor: async () => {},
-            setTitle: async () => {},
-            disable: async () => {},
+            setTitle: async ({ title }) => { actionTitle = title; },
+            disable: async () => { disabled = true; },
             onClicked: {
                 listeners: [],
                 addListener(fn) { this.listeners.push(fn); }
@@ -31,7 +37,7 @@ function createMockBrowser(options = {}) {
             websites: {
                 resistFingerprinting: {
                     value: resistFingerprinting,
-                    levelOfControl: "controlled_by_this_extension",
+                    levelOfControl,
                     get: async () => ({
                         value: mock.privacy.websites.resistFingerprinting.value,
                         levelOfControl: mock.privacy.websites.resistFingerprinting.levelOfControl
@@ -77,13 +83,13 @@ function createMockBrowser(options = {}) {
     return mock;
 }
 
-describe("background.js platform-adaptive behavior", () => {
+describe("background.js behavior", () => {
     const backgroundCode = fs.readFileSync(
         path.resolve(__dirname, "../src/background.js"),
         "utf-8"
     );
 
-    it("should clear popup and attach onClicked listener on Desktop (linux/mac/win)", async () => {
+    it("should attach onClicked listener and toggle setting on Desktop (linux/mac/win)", async () => {
         const mockBrowser = createMockBrowser({ hasWindows: true, platformOs: "linux" });
         const sandbox = { browser: mockBrowser, console };
         vm.createContext(sandbox);
@@ -91,8 +97,6 @@ describe("background.js platform-adaptive behavior", () => {
         vm.runInContext(backgroundCode, sandbox);
         await sleep(50);
 
-        // On desktop, popup should be cleared to allow onClicked events
-        assert.strictEqual(mockBrowser.browserAction.popup, "");
         assert.strictEqual(mockBrowser.browserAction.onClicked.listeners.length, 1);
 
         // Verify click toggles resistFingerprinting
@@ -102,7 +106,7 @@ describe("background.js platform-adaptive behavior", () => {
         assert.strictEqual(mockBrowser.privacy.websites.resistFingerprinting.value, false);
     });
 
-    it("should retain default popup and NOT attach onClicked listener on Android", async () => {
+    it("should attach onClicked listener and toggle setting on Android", async () => {
         const mockBrowser = createMockBrowser({ hasWindows: false, platformOs: "android" });
         const sandbox = { browser: mockBrowser, console };
         vm.createContext(sandbox);
@@ -110,9 +114,13 @@ describe("background.js platform-adaptive behavior", () => {
         vm.runInContext(backgroundCode, sandbox);
         await sleep(50);
 
-        // On Android, popup must NOT be cleared and onClicked must NOT be registered
-        assert.strictEqual(mockBrowser.browserAction.popup, undefined);
-        assert.strictEqual(mockBrowser.browserAction.onClicked.listeners.length, 0);
+        assert.strictEqual(mockBrowser.browserAction.onClicked.listeners.length, 1);
+
+        // Verify tap toggles resistFingerprinting on Android
+        const [clickListener] = mockBrowser.browserAction.onClicked.listeners;
+        assert.strictEqual(mockBrowser.privacy.websites.resistFingerprinting.value, true);
+        await clickListener();
+        assert.strictEqual(mockBrowser.privacy.websites.resistFingerprinting.value, false);
     });
 
     it("should execute cleanly on Android environment where browser.windows is undefined", async () => {
@@ -145,5 +153,57 @@ describe("background.js platform-adaptive behavior", () => {
             windowId: 42,
             updateInfo: { state: "maximized" }
         });
+    });
+
+    it("should allow control when levelOfControl is controllable_by_this_extension", async () => {
+        const mockBrowser = createMockBrowser({
+            hasWindows: true,
+            resistFingerprinting: false,
+            platformOs: "linux",
+            levelOfControl: "controllable_by_this_extension"
+        });
+        const sandbox = { browser: mockBrowser, console };
+        vm.createContext(sandbox);
+
+        vm.runInContext(backgroundCode, sandbox);
+        await sleep(50);
+
+        assert.strictEqual(mockBrowser.browserAction.disabled, false);
+        assert.strictEqual(mockBrowser.browserAction.onClicked.listeners.length, 1);
+    });
+
+    it("should allow control when levelOfControl is controlled_by_this_extension", async () => {
+        const mockBrowser = createMockBrowser({
+            hasWindows: true,
+            resistFingerprinting: true,
+            platformOs: "linux",
+            levelOfControl: "controlled_by_this_extension"
+        });
+        const sandbox = { browser: mockBrowser, console };
+        vm.createContext(sandbox);
+
+        vm.runInContext(backgroundCode, sandbox);
+        await sleep(50);
+
+        assert.strictEqual(mockBrowser.browserAction.disabled, false);
+        assert.strictEqual(mockBrowser.browserAction.onClicked.listeners.length, 1);
+    });
+
+    it("should disable browserAction and set Permission Denied title when levelOfControl is not_controllable", async () => {
+        const mockBrowser = createMockBrowser({
+            hasWindows: true,
+            resistFingerprinting: false,
+            platformOs: "linux",
+            levelOfControl: "not_controllable"
+        });
+        const sandbox = { browser: mockBrowser, console };
+        vm.createContext(sandbox);
+
+        vm.runInContext(backgroundCode, sandbox);
+        await sleep(50);
+
+        assert.strictEqual(mockBrowser.browserAction.disabled, true);
+        assert.strictEqual(mockBrowser.browserAction.title, "Resist Fingerprinting (Permission Denied)");
+        assert.strictEqual(mockBrowser.browserAction.onClicked.listeners.length, 0);
     });
 });

@@ -38,15 +38,11 @@
         return;
     }
 
-    const platformInfo = await browser.runtime.getPlatformInfo();
-    if (platformInfo.os !== "android") {
-        await browser.browserAction.setPopup({ popup: "" });
-        browser.browserAction.onClicked.addListener(async () => {
-            enabled = !(await browser.privacy.websites.resistFingerprinting.get({})).value;
-            await browser.privacy.websites.resistFingerprinting.set({ value: enabled });
-            await setButtonState(enabled);
-        });
-    }
+    browser.browserAction.onClicked.addListener(async () => {
+        enabled = !(await browser.privacy.websites.resistFingerprinting.get({})).value;
+        await browser.privacy.websites.resistFingerprinting.set({ value: enabled });
+        await setButtonState(enabled);
+    });
 
     if (browser.windows) {
         browser.windows.onCreated.addListener(async (window) => {
