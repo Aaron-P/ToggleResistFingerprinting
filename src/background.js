@@ -31,7 +31,8 @@
     await browser.browserAction.setBadgeTextColor({ color: "#FFFFFF" });
     await setButtonState(enabled);
 
-    if (settings.levelOfControl !== "controllable_by_this_extension") {
+    if (settings.levelOfControl !== "controlled_by_this_extension" &&
+        settings.levelOfControl !== "controllable_by_this_extension") {
         await browser.browserAction.disable();
         await browser.browserAction.setTitle({ title: "Resist Fingerprinting (Permission Denied)" });
         return;
