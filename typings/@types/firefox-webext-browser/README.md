@@ -8,7 +8,7 @@ This package contains type definitions for firefox-webext-browser (https://devel
 Files were exported from https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/firefox-webext-browser.
 
 ### Additional Details
- * Last updated: Mon, 17 Jun 2024 20:07:03 GMT
+ * Last updated: Mon, 28 Sep 2026 23:34:57 GMT
  * Dependencies: none
 
 # Credits
