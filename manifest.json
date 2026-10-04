@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Toggle Resist Fingerprinting",
-    "version": "1.3.2",
+    "version": "1.3.3",
     "description": "Adds a button to toggle the \"resist fingerprinting\" privacy setting.",
     "author": "Aaron Papp",
     "homepage_url": "https://github.com/Aaron-P/ToggleResistFingerprinting",

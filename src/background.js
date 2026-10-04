@@ -93,7 +93,11 @@
     browser.tabs.onActivated.addListener(refreshState);
     browser.windows.onFocusChanged.addListener(refreshState)
 
+    let startup = true;
+    if (startup)
     {
+        startup = false;
+
         const options = await browser.storage.local.get({
             maximizeWindowTypes: MaximizeWindowTypes.None,
             maximizeWindowsOnStartup: false,
