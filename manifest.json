@@ -2,7 +2,7 @@
     "manifest_version": 2,
     "name": "Toggle Resist Fingerprinting",
     "version": "1.2",
-    "description": "Adds a button to the navigation bar to toggle the \"resist fingerprinting\" setting.",
+    "description": "Adds a button to toggle the \"resist fingerprinting\" privacy setting.",
     "author": "Aaron Papp",
     "homepage_url": "https://github.com/Aaron-P/ToggleResistFingerprinting",
     "icons": {
