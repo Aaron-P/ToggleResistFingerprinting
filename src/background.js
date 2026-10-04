@@ -56,13 +56,35 @@
             return;
 
         const options = await browser.storage.local.get({
-            maximizeWindowTypes: MaximizeWindowTypes.None
+            maximizeWindowTypes: MaximizeWindowTypes.None,
+            maximizeWindowsOnStartup: false,
         });
 
         if (!window.incognito && (options.maximizeWindowTypes & MaximizeWindowTypes.Normal))
             await browser.windows.update(window.id, { state: "maximized" });
         if (window.incognito && (options.maximizeWindowTypes & MaximizeWindowTypes.Private))
             await browser.windows.update(window.id, { state: "maximized" });
+    });
+
+    browser.runtime.onStartup.addListener(async () => {
+        const options = await browser.storage.local.get({
+            maximizeWindowTypes: MaximizeWindowTypes.None,
+            maximizeWindowsOnStartup: false,
+        });
+
+        if (!options.maximizeWindowsOnStartup)
+            return;
+
+        var windows = await browser.windows.getAll({
+            windowTypes: ["normal"]
+        });
+
+        windows.forEach(async (window) => {
+            if (window.id == null)
+                return;
+
+            await browser.windows.update(window.id, { state: "maximized" });
+        });
     });
 
     //The setting can be changed out from under us, e.g. via about:config, and
