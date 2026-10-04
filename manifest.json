@@ -6,11 +6,7 @@
     "author": "Aaron Papp",
     "homepage_url": "https://github.com/Aaron-P/ToggleResistFingerprinting",
     "icons": {
-        "24": "src/icons/icon.svg",
-        "32": "src/icons/icon.svg",
-        "48": "src/icons/icon.svg",
-        "64": "src/icons/icon.svg",
-        "96": "src/icons/icon.svg"
+        "128": "src/icons/icon.svg"
     },
     "permissions": [
         "storage",
