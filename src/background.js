@@ -11,6 +11,7 @@
         "Private": 2,
     };
 
+    /** @param {boolean} enabled */
     async function setButtonState(enabled) {
         if (enabled) {
             await browser.browserAction.setBadgeBackgroundColor({ color: "#00BF00" });
@@ -46,7 +47,7 @@
 
     browser.windows.onCreated.addListener(async (window) => {
         //Only resize normal windows.
-        if (window.type !== "normal")
+        if (window.type !== "normal" || window.id == null)
             return;
 
         //If resist fingerprinting is disabled rely on normal window size functionality.
