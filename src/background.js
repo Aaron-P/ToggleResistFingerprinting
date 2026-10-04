@@ -92,4 +92,25 @@
     //fire in all cases, so check the value periodically.
     browser.tabs.onActivated.addListener(refreshState);
     browser.windows.onFocusChanged.addListener(refreshState)
+
+    {
+        const options = await browser.storage.local.get({
+            maximizeWindowTypes: MaximizeWindowTypes.None,
+            maximizeWindowsOnStartup: false,
+        });
+
+        if (!options.maximizeWindowsOnStartup)
+            return;
+
+        var windows = await browser.windows.getAll({
+            windowTypes: ["normal"]
+        });
+
+        windows.forEach(async (window) => {
+            if (window.id == null)
+                return;
+
+            await browser.windows.update(window.id, { state: "maximized" });
+        });
+    }
 }());
